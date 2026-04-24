@@ -11,6 +11,7 @@ import cron from "node-cron";
 import { CONFIG } from "./config.js";
 import { buildEdaMessage, edaCommand } from "./commands/eda.js";
 import { loadCommands } from "./file.js";
+import { createHelpCommand } from "./help.js";
 
 function isSendableTextChannel(ch: unknown): ch is TextBasedChannel {
   return !!ch && typeof (ch as any).send === "function";
@@ -18,6 +19,7 @@ function isSendableTextChannel(ch: unknown): ch is TextBasedChannel {
 
 async function start() {
   const commands = await loadCommands();
+  commands.push(createHelpCommand(commands));
 
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
