@@ -54,7 +54,11 @@ async function start() {
   client.once("ready", async () => {
     if (!client.user) return;
 
-    // Registrar comandos (guild) agora que sabemos o applicationId
+    if (CONFIG.debug) {
+        console.log("Bot ID:", client.user.id);
+        console.log("Guilds que o bot vê:", client.guilds.cache.map(g => g.id));
+    }
+
     const rest = new REST({ version: "10" }).setToken(CONFIG.discordToken);
     await rest.put(
       Routes.applicationGuildCommands(client.user.id, CONFIG.guildId),
