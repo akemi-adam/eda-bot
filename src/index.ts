@@ -8,42 +8,29 @@ import {
 } from "discord.js";
 
 import { CONFIG } from "./config.js";
-import { scrapeSpiritPage } from "./scrape.ts";
-import { formatSince } from "./time-format.ts";
+import { scrapeSpiritPage } from "./scrape.js";
+import { formatSince } from "./time-format.js";
 
 const command = new SlashCommandBuilder()
   .setName("eda")
-  .setDescription("Mostra há quanto tempo 'Espiões de Aluguel' está sem atualização.");
-
-async function registerCommands() {
-  const rest = new REST({ version: "10" }).setToken(CONFIG.discordToken);
-
-  await rest.put(
-    Routes.applicationGuildCommands(
-      // applicationId é o id do bot (client.user.id). A gente registra depois de logar,
-      // então aqui vamos registrar em runtime na função start.
-      // Esta função será chamada com o appId.
-      "" as unknown as string,
-      CONFIG.guildId
-    ),
-    { body: [command.toJSON()] }
+  .setDescription(
+    "Mostra há quanto tempo 'Espiões de Aluguel' está sem atualização.",
   );
-}
 
 function cobrançaMessage(lastUpdaterUser: string): string | null {
-  if (lastUpdaterUser === "akeml") {
+  if (lastUpdaterUser === "akeml")
     return "O vagabundo Ganestgamer11 está devendo o próximo capítulo! Deixe esse pobre cadáver em paz e vá escrever!";
-  }
-  if (lastUpdaterUser === "Ganestgamer11") {
+  if (lastUpdaterUser === "Ganestgamer11")
     return "A vagabunda akeml está devendo o próximo capítulo! Tire esses cachorros da panela e vá escrever!";
-  }
   return null;
 }
 
 async function onEdaCommand(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  const { updatedAt, lastUpdaterUser } = await scrapeSpiritPage(CONFIG.targetUrl);
+  const { updatedAt, lastUpdaterUser } = await scrapeSpiritPage(
+    CONFIG.targetUrl,
+  );
   const now = new Date();
 
   const pretty = formatSince(updatedAt, now);
@@ -68,10 +55,12 @@ async function start() {
     const rest = new REST({ version: "10" }).setToken(CONFIG.discordToken);
     await rest.put(
       Routes.applicationGuildCommands(client.user.id, CONFIG.guildId),
-      { body: [command.toJSON()] }
+      { body: [command.toJSON()] },
     );
 
-    console.log(`Logado como ${client.user.tag}. Comando /eda registrado em guild ${CONFIG.guildId}.`);
+    console.log(
+      `Logado como ${client.user.tag}. Comando /eda registrado em guild ${CONFIG.guildId}.`,
+    );
   });
 
   client.on("interactionCreate", async (interaction) => {
