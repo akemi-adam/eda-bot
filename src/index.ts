@@ -9,7 +9,7 @@ import {
 
 import { CONFIG } from "./config.js";
 import { scrapeSpiritPage } from "./scrape.js";
-import { formatSince } from "./time-format.js";
+import { formatSinceHuman } from "./time-format.js";
 
 const command = new SlashCommandBuilder()
   .setName("eda")
@@ -36,12 +36,11 @@ async function onEdaCommand(interaction: ChatInputCommandInteraction) {
   );
   const now = new Date();
 
-  const pretty = formatSince(updatedAt, now);
+  const prettyHuman = formatSinceHuman(updatedAt, now);
 
-  const mainLine = `Fazem **${pretty.value}** que EDA não é atualizada`;
-  const whoLine = `Última atualização por: **${lastUpdaterUser}**`;
-
-  const cobrança = chargeMessage(lastUpdaterUser);
+  const mainLine = `Au, au! Fazem **${prettyHuman}** que EDA não é atualizada`;
+  const whoLine = `Au, au! Última atualização por: **${lastUpdaterUser}**`;
+  const cobrança = `Au, au! ${chargeMessage(lastUpdaterUser)}`;
 
   const content = [mainLine, whoLine, cobrança].filter(Boolean).join("\n");
 
@@ -55,8 +54,11 @@ async function start() {
     if (!client.user) return;
 
     if (CONFIG.debug) {
-        console.log("Bot ID:", client.user.id);
-        console.log("Guilds que o bot vê:", client.guilds.cache.map(g => g.id));
+      console.log("Bot ID:", client.user.id);
+      console.log(
+        "Guilds que o bot vê:",
+        client.guilds.cache.map((g) => g.id),
+      );
     }
 
     const rest = new REST({ version: "10" }).setToken(CONFIG.discordToken);
