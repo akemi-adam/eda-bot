@@ -17,11 +17,14 @@ const command = new SlashCommandBuilder()
     "Mostra há quanto tempo 'Espiões de Aluguel' está sem atualização.",
   );
 
-function cobrançaMessage(lastUpdaterUser: string): string | null {
+function chargeMessage(lastUpdaterUser: string): string | null {
+  const ganest = mention(CONFIG.ganestDiscordId);
+  const akeml = mention(CONFIG.akemlDiscordId);
+
   if (lastUpdaterUser === "akeml")
-    return "O vagabundo Ganestgamer11 está devendo o próximo capítulo! Deixe esse pobre cadáver em paz e vá escrever!";
+    return `O vagabundo ${ganest} está devendo o próximo capítulo! Deixe esse pobre cadáver em paz e vá escrever!`;
   if (lastUpdaterUser === "Ganestgamer11")
-    return "A vagabunda akeml está devendo o próximo capítulo! Tire esses cachorros da panela e vá escrever!";
+    return `A vagabunda ${akeml} está devendo o próximo capítulo! Tire esses cachorros da panela e vá escrever!`;
   return null;
 }
 
@@ -38,7 +41,7 @@ async function onEdaCommand(interaction: ChatInputCommandInteraction) {
   const mainLine = `Fazem **${pretty.value}** que EDA não é atualizada`;
   const whoLine = `Última atualização por: **${lastUpdaterUser}**`;
 
-  const cobrança = cobrançaMessage(lastUpdaterUser);
+  const cobrança = chargeMessage(lastUpdaterUser);
 
   const content = [mainLine, whoLine, cobrança].filter(Boolean).join("\n");
 
@@ -84,6 +87,10 @@ async function start() {
   });
 
   await client.login(CONFIG.discordToken);
+}
+
+function mention(userId: string): string {
+  return userId ? `<@${userId}>` : "(ID do Discord não configurado)";
 }
 
 start().catch((e) => {
