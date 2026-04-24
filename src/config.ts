@@ -6,7 +6,8 @@ export const CONFIG = {
   targetUrl: "https://www.spiritfanfiction.com/historia/espioes-de-aluguel-14666858",
   akemlDiscordId: process.env.AKEML_DISCORD_ID ?? "",
   ganestDiscordId: process.env.GANEST_DISCORD_ID ?? "",
-  debug: process.env.DEBUG?.toLowerCase() === 'true'
+  debug: process.env.DEBUG?.toLowerCase() === 'true',
+  channelId: process.env.CHANNEL_ID ?? '',
 };
 
 if (!CONFIG.discordToken) throw new Error("DISCORD_TOKEN não configurado no .env");

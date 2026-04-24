@@ -5,7 +5,10 @@ import {
   Routes,
   SlashCommandBuilder,
   ChatInputCommandInteraction,
+  TextBasedChannel,
 } from "discord.js";
+
+import cron from "node-cron";
 
 import { CONFIG } from "./config.js";
 import { scrapeSpiritPage } from "./scrape.js";
@@ -16,6 +19,10 @@ const command = new SlashCommandBuilder()
   .setDescription(
     "Mostra há quanto tempo 'Espiões de Aluguel' está sem atualização.",
   );
+
+function mention(userId: string): string {
+  return userId ? `<@${userId}>` : "(ID do Discord não configurado)";
+}
 
 function chargeMessage(lastUpdaterUser: string): string | null {
   const ganest = mention(CONFIG.ganestDiscordId);
@@ -28,23 +35,29 @@ function chargeMessage(lastUpdaterUser: string): string | null {
   return null;
 }
 
-async function onEdaCommand(interaction: ChatInputCommandInteraction) {
-  await interaction.deferReply();
-
+async function buildEdaMessage(): Promise<string> {
   const { updatedAt, lastUpdaterUser } = await scrapeSpiritPage(
     CONFIG.targetUrl,
   );
-  const now = new Date();
-
-  const prettyHuman = formatSinceHuman(updatedAt, now);
+  const prettyHuman = formatSinceHuman(updatedAt, new Date());
 
   const mainLine = `Au, au! Fazem **${prettyHuman}** que EDA não é atualizada`;
   const whoLine = `Au, au! Última atualização por: **${lastUpdaterUser}**`;
-  const cobrança = `Au, au! ${chargeMessage(lastUpdaterUser)}`;
 
-  const content = [mainLine, whoLine, cobrança].filter(Boolean).join("\n");
+  const charge = chargeMessage(lastUpdaterUser);
+  const cobrançaLine = charge ? `Au, au! ${charge}` : null;
 
+  return [mainLine, whoLine, cobrançaLine].filter(Boolean).join("\n");
+}
+
+async function onEdaCommand(interaction: ChatInputCommandInteraction) {
+  await interaction.deferReply();
+  const content = await buildEdaMessage();
   await interaction.editReply({ content });
+}
+
+function isSendableTextChannel(ch: unknown): ch is TextBasedChannel {
+  return !!ch && typeof (ch as any).send === "function";
 }
 
 async function start() {
@@ -57,7 +70,7 @@ async function start() {
       console.log("Bot ID:", client.user.id);
       console.log(
         "Guilds que o bot vê:",
-        client.guilds.cache.map((g) => g.id),
+        client.guilds.cache.map((g) => `${g.name}(${g.id})`).join(", "),
       );
     }
 
@@ -69,6 +82,34 @@ async function start() {
 
     console.log(
       `Logado como ${client.user.tag}. Comando /eda registrado em guild ${CONFIG.guildId}.`,
+    );
+
+    // Cron diário (09:00 America/Sao_Paulo)
+    cron.schedule(
+      "0 9 * * *",
+      async () => {
+        try {
+          if (!CONFIG.channelId) {
+            if (CONFIG.debug)
+              console.log("Cron: CONFIG.channelId não configurado, pulando.");
+            return;
+          }
+
+          const channel = await client.channels.fetch(CONFIG.channelId);
+          if (!isSendableTextChannel(channel)) {
+            console.error(
+              `Cron: channelId ${CONFIG.channelId} não é um canal de texto enviável (ou não foi encontrado).`,
+            );
+            return;
+          }
+
+          const msg = await buildEdaMessage();
+          await channel.send({ content: msg });
+        } catch (e) {
+          console.error("Cron falhou:", e);
+        }
+      },
+      { timezone: "America/Sao_Paulo" },
     );
   });
 
@@ -92,11 +133,10 @@ async function start() {
     }
   });
 
-  await client.login(CONFIG.discordToken);
-}
+  client.on("error", console.error);
+  process.on("unhandledRejection", console.error);
 
-function mention(userId: string): string {
-  return userId ? `<@${userId}>` : "(ID do Discord não configurado)";
+  await client.login(CONFIG.discordToken);
 }
 
 start().catch((e) => {
