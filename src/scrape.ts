@@ -17,32 +17,44 @@ export async function scrapeSpiritPage(url: string): Promise<ScrapeResult> {
     },
   });
 
-  if (!res.ok) throw new Error(`Falha ao baixar página (${res.status})`);
+  if (!res.ok) {
+    throw new Error(`Falha ao baixar página (${res.status})`);
+  }
 
   const html = await res.text();
   const $ = cheerio.load(html);
 
-  const times = $(".texto.espacamentoTop time[datetime]");
-  const updatedAtIso = String(times.eq(1).attr("datetime") ?? "").trim();
-  if (!updatedAtIso)
-    throw new Error(
-      "Não encontrei o datetime da atualização em .texto.espacamentoTop (segundo <time>).",
-    );
+  const latestActivity = $("#divAtividades .atividade").first();
 
-  const updatedAt = new Date(updatedAtIso);
-  if (Number.isNaN(updatedAt.getTime()))
-    throw new Error(`Datetime inválido: ${updatedAtIso}`);
+  if (!latestActivity.length) {
+    throw new Error("Nenhuma atividade encontrada em #divAtividades.");
+  }
 
-  const lastUpdaterUser = String(
-    $(".boxMenuDireito span.usuario a[data-usuario]")
-      .first()
-      .attr("data-usuario") ?? "",
+  const updatedAtIso = String(
+    latestActivity.find("a.data").attr("title") ?? "",
   ).trim();
 
-  if (!lastUpdaterUser)
-    throw new Error(
-      "Não encontrei o último usuário em .boxMenuDireito span.usuario a[data-usuario].",
-    );
+  if (!updatedAtIso) {
+    throw new Error("Não encontrei o datetime da atividade mais recente.");
+  }
 
-  return { updatedAt, updatedAtIso, lastUpdaterUser };
+  const updatedAt = new Date(updatedAtIso);
+
+  if (Number.isNaN(updatedAt.getTime())) {
+    throw new Error(`Datetime inválido: ${updatedAtIso}`);
+  }
+
+  const lastUpdaterUser = String(
+    latestActivity.find("a[data-usuario]").first().attr("data-usuario") ?? "",
+  ).trim();
+
+  if (!lastUpdaterUser) {
+    throw new Error("Não encontrei o usuário da atividade mais recente.");
+  }
+
+  return {
+    updatedAt,
+    updatedAtIso,
+    lastUpdaterUser,
+  };
 }

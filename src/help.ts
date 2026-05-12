@@ -15,13 +15,13 @@ export function createHelpCommand(commands: Command[]): Command {
       for (const cmd of commands.filter((c) => c.data.name !== "help")) {
         const data = cmd.data.toJSON();
 
-        let line = `/**/${data.name} - ${data.description}`;
+        let line = `/**${data.name}** - *${data.description}*`;
 
         if (data.options && data.options.length > 0) {
           const opts = data.options
             .map((opt: any) => {
               const required = opt.required ? "(obrigatório)" : "(opcional)";
-              return `• ${opt.name}: ${opt.description} ${required}`;
+              return `\t• **${opt.name}**: *${opt.description}* ${required}`;
             })
             .join("\n");
 

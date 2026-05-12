@@ -3,7 +3,7 @@ import "dotenv/config";
 export const CONFIG = {
   discordToken: process.env.DISCORD_TOKEN ?? "",
   guildId: process.env.GUILD_ID ?? "",
-  targetUrl: "https://www.spiritfanfiction.com/historia/espioes-de-aluguel-14666858",
+  targetUrl: "https://www.spiritfanfiction.com/historia/espioes-de-aluguel-14666858/atividades",
   akemlDiscordId: process.env.AKEML_DISCORD_ID ?? "",
   ganestDiscordId: process.env.GANEST_DISCORD_ID ?? "",
   debug: process.env.DEBUG?.toLowerCase() === 'true',
